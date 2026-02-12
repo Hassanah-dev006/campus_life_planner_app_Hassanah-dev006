@@ -1,0 +1,16 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Editor directories
+.vscode/
+.idea/
+
+# Node (if using npx serve or similar)
+node_modules/
+package-lock.json
+
+# Build artifacts
+dist/
