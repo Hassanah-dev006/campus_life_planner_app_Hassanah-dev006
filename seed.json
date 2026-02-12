@@ -1,0 +1,122 @@
+[
+  {
+    "id": "task_001",
+    "title": "Study for Calculus Exam",
+    "dueDate": "2025-02-12",
+    "duration": 120,
+    "tag": "Study",
+    "notes": "Focus on integration by parts and series convergence. Review at 10:30 AM.",
+    "createdAt": "2025-02-05T08:00:00.000Z",
+    "updatedAt": "2025-02-05T08:00:00.000Z"
+  },
+  {
+    "id": "task_002",
+    "title": "Submit ALU Ethics Essay",
+    "dueDate": "2025-02-13",
+    "duration": 90,
+    "tag": "Assignment",
+    "notes": "2000 words minimum. Remember to cite all sources properly.",
+    "createdAt": "2025-02-06T09:30:00.000Z",
+    "updatedAt": "2025-02-06T09:30:00.000Z"
+  },
+  {
+    "id": "task_003",
+    "title": "Basketball Practice",
+    "dueDate": "2025-02-11",
+    "duration": 60,
+    "tag": "Sports",
+    "notes": "Meet at the gymnasium at 4:00 PM sharp.",
+    "createdAt": "2025-02-04T14:00:00.000Z",
+    "updatedAt": "2025-02-04T14:00:00.000Z"
+  },
+  {
+    "id": "task_004",
+    "title": "Coding Club Hackathon Prep",
+    "dueDate": "2025-02-14",
+    "duration": 180,
+    "tag": "Club",
+    "notes": "Prepare API endpoints. Team meets at 9:00 AM in lab B.",
+    "createdAt": "2025-02-07T10:15:00.000Z",
+    "updatedAt": "2025-02-07T10:15:00.000Z"
+  },
+  {
+    "id": "task_005",
+    "title": "Grocery Run",
+    "dueDate": "2025-02-10",
+    "duration": 30,
+    "tag": "Errands",
+    "notes": "Buy rice, beans, tomatoes, and cooking oil.",
+    "createdAt": "2025-02-03T16:45:00.000Z",
+    "updatedAt": "2025-02-03T16:45:00.000Z"
+  },
+  {
+    "id": "task_006",
+    "title": "Movie Night with Friends",
+    "dueDate": "2025-02-15",
+    "duration": 150,
+    "tag": "Social",
+    "notes": "Watching a documentary. Bring snacks!",
+    "createdAt": "2025-02-08T11:00:00.000Z",
+    "updatedAt": "2025-02-08T11:00:00.000Z"
+  },
+  {
+    "id": "task_007",
+    "title": "Read Chapter 5 of Data Structures",
+    "dueDate": "2025-02-12",
+    "duration": 45,
+    "tag": "Study",
+    "notes": "Binary trees and and traversal algorithms. Important for quiz.",
+    "createdAt": "2025-02-05T13:20:00.000Z",
+    "updatedAt": "2025-02-05T13:20:00.000Z"
+  },
+  {
+    "id": "task_008",
+    "title": "Laundry & Room Cleanup",
+    "dueDate": "2025-02-09",
+    "duration": 45,
+    "tag": "Errands",
+    "notes": "",
+    "createdAt": "2025-02-02T07:00:00.000Z",
+    "updatedAt": "2025-02-02T07:00:00.000Z"
+  },
+  {
+    "id": "task_009",
+    "title": "Frontend Web Dev Project Work",
+    "dueDate": "2025-02-16",
+    "duration": 240,
+    "tag": "Assignment",
+    "notes": "Campus Life Planner — finish regex validation and search features. Due by 11:59 PM.",
+    "createdAt": "2025-02-09T08:30:00.000Z",
+    "updatedAt": "2025-02-10T19:00:00.000Z"
+  },
+  {
+    "id": "task_010",
+    "title": "Yoga Session",
+    "dueDate": "2025-02-11",
+    "duration": 30,
+    "tag": "Sports",
+    "notes": "Morning session at 6:30 AM. Bring mat.",
+    "createdAt": "2025-02-04T06:00:00.000Z",
+    "updatedAt": "2025-02-04T06:00:00.000Z"
+  },
+  {
+    "id": "task_011",
+    "title": "Peer-Review Partner Meeting",
+    "dueDate": "2025-02-13",
+    "duration": 60,
+    "tag": "Study",
+    "notes": "Review each other's essays. Meet in library room 3B.",
+    "createdAt": "2025-02-06T15:00:00.000Z",
+    "updatedAt": "2025-02-06T15:00:00.000Z"
+  },
+  {
+    "id": "task_012",
+    "title": "Call Home",
+    "dueDate": "2025-02-08",
+    "duration": 20,
+    "tag": "Other",
+    "notes": "Check in with family. Maybe video call after 7:00 PM.",
+    "createdAt": "2025-02-01T18:00:00.000Z",
+    "updatedAt": "2025-02-01T18:00:00.000Z"
+  }
+]

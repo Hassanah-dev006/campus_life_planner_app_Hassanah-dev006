@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Life Planner</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Skip to content link for accessibility -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- ============ HEADER ============ -->
+  <header class="site-header" role="banner">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon" aria-hidden="true">📋</span>
+        <h1 class="logo-text">Campus Life Planner</h1>
+      </div>
+      <button class="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="main-nav">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+      <nav id="main-nav" class="main-nav" aria-label="Main navigation">
+        <ul class="nav-list" role="menubar">
+          <li role="none"><a href="#about" role="menuitem" class="nav-link active" data-page="about">About</a></li>
+          <li role="none"><a href="#dashboard" role="menuitem" class="nav-link" data-page="dashboard">Dashboard</a></li>
+          <li role="none"><a href="#records" role="menuitem" class="nav-link" data-page="records">Tasks</a></li>
+          <li role="none"><a href="#add" role="menuitem" class="nav-link" data-page="add">Add New</a></li>
+          <li role="none"><a href="#settings" role="menuitem" class="nav-link" data-page="settings">Settings</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ============ MAIN CONTENT ============ -->
+  <main id="main-content" class="main-content">
+
+    <!-- Live region for status announcements -->
+    <div id="status-polite" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div id="status-assertive" class="sr-only" role="alert" aria-live="assertive" aria-atomic="true"></div>
+
+    <!-- ======== ABOUT PAGE ======== -->
+    <section id="about" class="page page--about active" aria-labelledby="about-heading">
+      <div class="page-container">
+        <div class="about-hero">
+          <h2 id="about-heading" class="page-title">Your Campus, Organized</h2>
+          <p class="about-subtitle">A lightweight planner to track tasks, events, and deadlines — built for students who juggle everything.</p>
+        </div>
+        <div class="about-grid">
+          <article class="about-card">
+            <span class="about-card-icon" aria-hidden="true">✅</span>
+            <h3>Task Management</h3>
+            <p>Add tasks with titles, due dates, durations, and tags. Edit inline, delete with confirmation, and keep everything organized.</p>
+          </article>
+          <article class="about-card">
+            <span class="about-card-icon" aria-hidden="true">📊</span>
+            <h3>Smart Dashboard</h3>
+            <p>See totals, trends, and top tags at a glance. Set time caps and get alerts when you're over budget.</p>
+          </article>
+          <article class="about-card">
+            <span class="about-card-icon" aria-hidden="true">🔍</span>
+            <h3>Regex Search</h3>
+            <p>Power-user search with live regex. Highlight matches, toggle case sensitivity, and find exactly what you need.</p>
+          </article>
+          <article class="about-card">
+            <span class="about-card-icon" aria-hidden="true">♿</span>
+            <h3>Fully Accessible</h3>
+            <p>Keyboard navigable, screen-reader friendly, ARIA live regions, visible focus, and responsive from 360px up.</p>
+          </article>
+        </div>
+        <div class="about-contact">
+          <h3>Contact</h3>
+          <p>
+            <a href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer">GitHub</a> ·
+            <a href="mailto:student@alustudent.com">student@alustudent.com</a>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======== DASHBOARD PAGE ======== -->
+    <section id="dashboard" class="page page--dashboard" aria-labelledby="dashboard-heading" hidden>
+      <div class="page-container">
+        <h2 id="dashboard-heading" class="page-title">Dashboard</h2>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Total Tasks</span>
+            <span class="stat-value" id="stat-total">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Total Duration</span>
+            <span class="stat-value" id="stat-duration">0 <small id="stat-duration-unit">min</small></span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Top Tag</span>
+            <span class="stat-value" id="stat-top-tag">—</span>
+          </div>
+          <div class="stat-card stat-card--cap">
+            <span class="stat-label">Cap Status</span>
+            <span class="stat-value" id="stat-cap">No cap set</span>
+            <div id="cap-bar-container" class="cap-bar-container" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Duration cap usage">
+              <div class="cap-bar-fill" id="cap-bar-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7-Day Trend Chart -->
+        <div class="chart-section">
+          <h3>Last 7 Days</h3>
+          <div class="chart-container" id="trend-chart" role="img" aria-label="Bar chart showing task durations over the last 7 days">
+            <!-- Bars rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Tag Breakdown -->
+        <div class="chart-section">
+          <h3>By Tag</h3>
+          <div class="tag-breakdown" id="tag-breakdown">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======== RECORDS PAGE ======== -->
+    <section id="records" class="page page--records" aria-labelledby="records-heading" hidden>
+      <div class="page-container">
+        <h2 id="records-heading" class="page-title">Tasks & Events</h2>
+
+        <!-- Search Bar -->
+        <div class="search-bar">
+          <div class="search-input-wrap">
+            <label for="search-input" class="sr-only">Search tasks (supports regex)</label>
+            <input type="text" id="search-input" class="search-input" placeholder="Search tasks… (regex supported)" autocomplete="off">
+            <div class="search-options">
+              <label class="toggle-label">
+                <input type="checkbox" id="search-case" class="toggle-checkbox">
+                <span class="toggle-text">Case sensitive</span>
+              </label>
+            </div>
+          </div>
+          <div id="search-error" class="search-error" role="alert" hidden></div>
+        </div>
+
+        <!-- Sort Controls -->
+        <div class="sort-controls" role="toolbar" aria-label="Sort tasks">
+          <span class="sort-label">Sort by:</span>
+          <button class="sort-btn active" data-sort="date" data-dir="desc" aria-label="Sort by date, descending">
+            Date <span class="sort-arrow" aria-hidden="true">↓</span>
+          </button>
+          <button class="sort-btn" data-sort="title" data-dir="asc" aria-label="Sort by title, ascending">
+            Title <span class="sort-arrow" aria-hidden="true">↕</span>
+          </button>
+          <button class="sort-btn" data-sort="duration" data-dir="desc" aria-label="Sort by duration, descending">
+            Duration <span class="sort-arrow" aria-hidden="true">↕</span>
+          </button>
+        </div>
+
+        <!-- Records Table (desktop) / Cards (mobile) -->
+        <div class="records-wrapper">
+          <table class="records-table" id="records-table" aria-label="Tasks and events">
+            <thead>
+              <tr>
+                <th scope="col">Title</th>
+                <th scope="col">Due Date</th>
+                <th scope="col">Duration</th>
+                <th scope="col">Tag</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="records-tbody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+          <div class="records-cards" id="records-cards" aria-label="Tasks and events">
+            <!-- Mobile card view rendered by JS -->
+          </div>
+          <p class="empty-state" id="empty-state" hidden>No tasks found. <a href="#add" data-page="add">Add your first task!</a></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======== ADD/EDIT FORM PAGE ======== -->
+    <section id="add" class="page page--add" aria-labelledby="add-heading" hidden>
+      <div class="page-container">
+        <h2 id="add-heading" class="page-title">Add New Task</h2>
+        <form id="task-form" class="task-form" novalidate>
+          <input type="hidden" id="form-id" value="">
+
+          <div class="form-group">
+            <label for="form-title" class="form-label">Title <span class="required" aria-hidden="true">*</span></label>
+            <input type="text" id="form-title" class="form-input" required aria-describedby="form-title-error" autocomplete="off" placeholder="e.g. Study for Calculus Exam">
+            <span id="form-title-error" class="form-error" role="alert" hidden></span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="form-date" class="form-label">Due Date <span class="required" aria-hidden="true">*</span></label>
+              <input type="text" id="form-date" class="form-input" required aria-describedby="form-date-error" autocomplete="off" placeholder="YYYY-MM-DD">
+              <span id="form-date-error" class="form-error" role="alert" hidden></span>
+            </div>
+            <div class="form-group">
+              <label for="form-duration" class="form-label">Duration (min) <span class="required" aria-hidden="true">*</span></label>
+              <input type="text" id="form-duration" class="form-input" required aria-describedby="form-duration-error" autocomplete="off" placeholder="e.g. 90">
+              <span id="form-duration-error" class="form-error" role="alert" hidden></span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="form-tag" class="form-label">Tag <span class="required" aria-hidden="true">*</span></label>
+            <input type="text" id="form-tag" class="form-input" required aria-describedby="form-tag-error" autocomplete="off" placeholder="e.g. Study" list="tag-suggestions">
+            <datalist id="tag-suggestions">
+              <!-- Populated by JS -->
+            </datalist>
+            <span id="form-tag-error" class="form-error" role="alert" hidden></span>
+          </div>
+
+          <!-- Advanced: description with duplicate word detection -->
+          <div class="form-group">
+            <label for="form-notes" class="form-label">Notes <span class="optional">(optional)</span></label>
+            <textarea id="form-notes" class="form-input form-textarea" rows="3" aria-describedby="form-notes-error" placeholder="Additional details…"></textarea>
+            <span id="form-notes-error" class="form-error" role="alert" hidden></span>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn--primary" id="form-submit-btn">Add Task</button>
+            <button type="button" class="btn btn--secondary" id="form-cancel-btn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ======== SETTINGS PAGE ======== -->
+    <section id="settings" class="page page--settings" aria-labelledby="settings-heading" hidden>
+      <div class="page-container">
+        <h2 id="settings-heading" class="page-title">Settings</h2>
+
+        <!-- Duration Units -->
+        <fieldset class="settings-group">
+          <legend>Duration Unit</legend>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="duration-unit" value="minutes" checked class="radio-input"> Minutes
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="duration-unit" value="hours" class="radio-input"> Hours
+            </label>
+          </div>
+          <p class="settings-hint">All durations will be displayed in the selected unit. Internal storage is always in minutes.</p>
+        </fieldset>
+
+        <!-- Duration Cap -->
+        <fieldset class="settings-group">
+          <legend>Weekly Duration Cap</legend>
+          <div class="form-group">
+            <label for="settings-cap" class="form-label">Maximum minutes per week</label>
+            <input type="text" id="settings-cap" class="form-input" placeholder="e.g. 2400" autocomplete="off" aria-describedby="settings-cap-hint">
+            <span id="settings-cap-hint" class="settings-hint">Set to 0 or leave empty to disable. Cap alerts appear on the Dashboard.</span>
+          </div>
+          <button type="button" class="btn btn--primary" id="save-cap-btn">Save Cap</button>
+        </fieldset>
+
+        <!-- Tags Management -->
+        <fieldset class="settings-group">
+          <legend>Default Tags</legend>
+          <div id="tags-list" class="tags-list">
+            <!-- Rendered by JS -->
+          </div>
+          <div class="form-group form-row">
+            <label for="new-tag-input" class="sr-only">Add new tag</label>
+            <input type="text" id="new-tag-input" class="form-input" placeholder="New tag name…" autocomplete="off">
+            <button type="button" class="btn btn--primary" id="add-tag-btn">Add Tag</button>
+          </div>
+        </fieldset>
+
+        <!-- Import/Export -->
+        <fieldset class="settings-group">
+          <legend>Data Management</legend>
+          <div class="import-export-btns">
+            <button type="button" class="btn btn--primary" id="export-btn">Export JSON</button>
+            <label class="btn btn--secondary import-label" tabindex="0" role="button" aria-label="Import JSON file">
+              Import JSON
+              <input type="file" id="import-input" accept=".json" class="sr-only">
+            </label>
+          </div>
+          <div id="import-status" class="import-status" role="status" hidden></div>
+        </fieldset>
+
+        <!-- Theme Toggle (Stretch) -->
+        <fieldset class="settings-group">
+          <legend>Appearance</legend>
+          <label class="toggle-label toggle-label--large">
+            <input type="checkbox" id="theme-toggle" class="toggle-checkbox">
+            <span class="toggle-slider" aria-hidden="true"></span>
+            <span class="toggle-text">Dark Mode</span>
+          </label>
+        </fieldset>
+
+        <!-- Danger Zone -->
+        <fieldset class="settings-group settings-group--danger">
+          <legend>Danger Zone</legend>
+          <button type="button" class="btn btn--danger" id="clear-data-btn">Clear All Data</button>
+          <p class="settings-hint">This will permanently delete all tasks and reset settings.</p>
+        </fieldset>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="site-footer" role="contentinfo">
+    <p>&copy; 2025 Campus Life Planner · Built with vanilla HTML, CSS & JS</p>
+  </footer>
+
+  <!-- ============ CONFIRM DIALOG ============ -->
+  <div id="confirm-dialog" class="modal-overlay" hidden>
+    <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-msg">
+      <h3 id="confirm-title" class="modal-title">Confirm</h3>
+      <p id="confirm-msg" class="modal-msg">Are you sure?</p>
+      <div class="modal-actions">
+        <button class="btn btn--danger" id="confirm-yes">Yes, Delete</button>
+        <button class="btn btn--secondary" id="confirm-no">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SCRIPTS ============ -->
+  <script type="module" src="scripts/app.js"></script>
+</body>
+</html>

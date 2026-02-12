@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Life Planner — Tests</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; padding: 2rem; background: #faf8f5; color: #1a1a2e; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    h2 { font-size: 1.15rem; margin: 1.5rem 0 0.75rem; color: #555; }
+    .test { padding: 0.5rem 0.75rem; margin: 0.25rem 0; border-radius: 6px; font-size: 0.9rem; font-family: monospace; }
+    .pass { background: #e8f5e6; color: #2d5a27; }
+    .fail { background: #fef2f2; color: #b91c1c; }
+    .summary { margin-top: 1.5rem; padding: 1rem; border-radius: 8px; font-weight: 600; font-size: 1.1rem; }
+    .summary.all-pass { background: #d1fae5; color: #065f46; }
+    .summary.has-fail { background: #fee2e2; color: #991b1b; }
+  </style>
+</head>
+<body>
+  <h1>📋 Campus Life Planner — Test Suite</h1>
+  <div id="results"></div>
+  <div id="summary"></div>
+
+  <script type="module">
+    import { validateField, validateForm, PATTERNS } from './scripts/validators.js';
+    import { compileRegex, highlight, filterTasks, escapeHTML } from './scripts/search.js';
+    import { validateImport } from './scripts/storage.js';
+
+    const results = document.getElementById('results');
+    const summary = document.getElementById('summary');
+    let passed = 0;
+    let failed = 0;
+
+    function assert(description, condition) {
+      const el = document.createElement('div');
+      el.className = `test ${condition ? 'pass' : 'fail'}`;
+      el.textContent = `${condition ? '✅' : '❌'} ${description}`;
+      results.appendChild(el);
+      if (condition) passed++; else failed++;
+    }
+
+    function section(title) {
+      const el = document.createElement('h2');
+      el.textContent = title;
+      results.appendChild(el);
+    }
+
+    // ================================================
+    // REGEX PATTERN TESTS
+    // ================================================
+    section('Regex Pattern: Title');
+    assert('Valid title: "Study for exam"', PATTERNS.title.test('Study for exam'));
+    assert('Valid title: single char "A"', PATTERNS.title.test('A'));
+    assert('Valid title: "My Task 123"', PATTERNS.title.test('My Task 123'));
+    assert('Invalid: leading space " Study"', !PATTERNS.title.test(' Study'));
+    assert('Invalid: trailing space "Study "', !PATTERNS.title.test('Study '));
+    assert('Invalid: empty string', !PATTERNS.title.test(''));
+
+    section('Regex Pattern: Numeric (Duration)');
+    assert('Valid: "0"', PATTERNS.numeric.test('0'));
+    assert('Valid: "5"', PATTERNS.numeric.test('5'));
+    assert('Valid: "12.5"', PATTERNS.numeric.test('12.5'));
+    assert('Valid: "90.25"', PATTERNS.numeric.test('90.25'));
+    assert('Invalid: "00"', !PATTERNS.numeric.test('00'));
+    assert('Invalid: "5."', !PATTERNS.numeric.test('5.'));
+    assert('Invalid: ".5"', !PATTERNS.numeric.test('.5'));
+    assert('Invalid: "12.345"', !PATTERNS.numeric.test('12.345'));
+    assert('Invalid: "-5"', !PATTERNS.numeric.test('-5'));
+
+    section('Regex Pattern: Date (YYYY-MM-DD)');
+    assert('Valid: "2025-09-29"', PATTERNS.date.test('2025-09-29'));
+    assert('Valid: "2025-01-01"', PATTERNS.date.test('2025-01-01'));
+    assert('Valid: "2025-12-31"', PATTERNS.date.test('2025-12-31'));
+    assert('Invalid: "2025-13-01"', !PATTERNS.date.test('2025-13-01'));
+    assert('Invalid: "2025-00-01"', !PATTERNS.date.test('2025-00-01'));
+    assert('Invalid: "25-01-01" (2-digit year)', !PATTERNS.date.test('25-01-01'));
+    assert('Invalid: "2025/01/01" (wrong separator)', !PATTERNS.date.test('2025/01/01'));
+
+    section('Regex Pattern: Tag');
+    assert('Valid: "Study"', PATTERNS.tag.test('Study'));
+    assert('Valid: "Group Work"', PATTERNS.tag.test('Group Work'));
+    assert('Valid: "Self-Care"', PATTERNS.tag.test('Self-Care'));
+    assert('Invalid: "123"', !PATTERNS.tag.test('123'));
+    assert('Invalid: empty', !PATTERNS.tag.test(''));
+    assert('Invalid: "tag-" (trailing hyphen)', !PATTERNS.tag.test('tag-'));
+    assert('Invalid: "-tag" (leading hyphen)', !PATTERNS.tag.test('-tag'));
+
+    section('Advanced Regex: Duplicate Words (Back-reference)');
+    assert('Detects "the the"', PATTERNS.duplicateWords.test('I saw the the cat'));
+    assert('Detects "and and"', PATTERNS.duplicateWords.test('Binary trees and and traversal'));
+    assert('Detects "is is"', PATTERNS.duplicateWords.test('This is is a test'));
+    assert('No false positive: "that this"', !PATTERNS.duplicateWords.test('that this'));
+    assert('No false positive: "the cat"', !PATTERNS.duplicateWords.test('the cat'));
+
+    section('Advanced Regex: Time Token (Lookahead)');
+    assert('Detects "10:30"', PATTERNS.timeToken.test('Meet at 10:30'));
+    assert('Detects "4:00 PM"', PATTERNS.timeToken.test('Meet at 4:00 PM'));
+    assert('Detects "9:00"', PATTERNS.timeToken.test('Team meets at 9:00 AM'));
+    assert('No match: "1234"', !PATTERNS.timeToken.test('Room 1234'));
+
+    section('Tag Filter Pattern');
+    assert('Matches "@tag:Study"', PATTERNS.tagFilter.test('@tag:Study'));
+    assert('Matches "@tag:Self-Care"', PATTERNS.tagFilter.test('@tag:Self-Care'));
+    assert('No match: "tag:Study" (no @)', !PATTERNS.tagFilter.test('tag:Study'));
+
+    // ================================================
+    // VALIDATION FUNCTION TESTS
+    // ================================================
+    section('validateField: Title');
+    assert('Valid title returns valid=true', validateField('title', 'Study').valid);
+    assert('Empty title returns valid=false', !validateField('title', '').valid);
+    assert('Leading space returns valid=false', !validateField('title', ' Study').valid);
+
+    section('validateField: Duration');
+    assert('Valid "90" returns valid=true', validateField('duration', '90').valid);
+    assert('Valid "0" returns valid=true', validateField('duration', '0').valid);
+    assert('Empty returns valid=false', !validateField('duration', '').valid);
+    assert('Invalid ".5" returns valid=false', !validateField('duration', '.5').valid);
+    assert('>1440 returns warning', validateField('duration', '1500').warning !== null);
+
+    section('validateField: Date');
+    assert('Valid date returns valid=true', validateField('date', '2025-02-12').valid);
+    assert('Invalid Feb 30 returns valid=false', !validateField('date', '2025-02-30').valid);
+    assert('Invalid format returns valid=false', !validateField('date', '12-02-2025').valid);
+
+    section('validateField: Notes (duplicate word warning)');
+    assert('No warning for clean text', validateField('notes', 'Clean text here').warning === null);
+    assert('Warning for "the the"', validateField('notes', 'I saw the the cat').warning !== null);
+
+    section('validateForm');
+    const formResult = validateForm({
+      title: 'Test Task',
+      duration: '60',
+      date: '2025-02-12',
+      tag: 'Study',
+      notes: ''
+    });
+    assert('Valid form returns valid=true', formResult.valid);
+
+    const invalidForm = validateForm({
+      title: '',
+      duration: 'abc',
+      date: '2025-13-01',
+      tag: '123!',
+      notes: ''
+    });
+    assert('Invalid form returns valid=false', !invalidForm.valid);
+    assert('Has title error', !!invalidForm.errors.title);
+    assert('Has duration error', !!invalidForm.errors.duration);
+    assert('Has date error', !!invalidForm.errors.date);
+    assert('Has tag error', !!invalidForm.errors.tag);
+
+    // ================================================
+    // SEARCH TESTS
+    // ================================================
+    section('compileRegex');
+    assert('Valid regex compiles', compileRegex('test').regex !== null);
+    assert('Empty input returns null regex', compileRegex('').regex === null);
+    assert('Invalid regex returns error', compileRegex('[invalid').error !== null);
+
+    section('highlight');
+    assert('Highlights match', highlight('Hello World', /World/gi).includes('<mark>World</mark>'));
+    assert('No match returns escaped text', highlight('Hello', /xyz/gi) === 'Hello');
+    assert('Escapes HTML', highlight('<script>alert("xss")</script>', null).includes('&lt;'));
+
+    section('filterTasks');
+    const sampleTasks = [
+      { id: '1', title: 'Study Math', dueDate: '2025-02-12', duration: 60, tag: 'Study', notes: '' },
+      { id: '2', title: 'Buy Books', dueDate: '2025-02-13', duration: 30, tag: 'Errands', notes: '' },
+      { id: '3', title: 'Study Physics', dueDate: '2025-02-14', duration: 90, tag: 'Study', notes: '' }
+    ];
+    assert('Empty search returns all', filterTasks(sampleTasks, '').filtered.length === 3);
+    assert('Search "Math" returns 1', filterTasks(sampleTasks, 'Math').filtered.length === 1);
+    assert('Search "Study" returns 2', filterTasks(sampleTasks, 'Study').filtered.length === 2);
+    assert('@tag:Study filters by tag', filterTasks(sampleTasks, '@tag:Study').filtered.length === 2);
+    assert('@tag:Errands filters by tag', filterTasks(sampleTasks, '@tag:Errands').filtered.length === 1);
+    assert('Regex search "^Study" matches', filterTasks(sampleTasks, '^Study').filtered.length === 2);
+
+    // ================================================
+    // IMPORT VALIDATION TESTS
+    // ================================================
+    section('validateImport');
+    const validJSON = JSON.stringify([{
+      id: 'test_1', title: 'Test', dueDate: '2025-01-01',
+      duration: 30, tag: 'Study', notes: ''
+    }]);
+    assert('Valid JSON passes', validateImport(validJSON).data.length === 1);
+    assert('Invalid JSON string fails', !validateImport('not json').valid);
+    assert('Non-array fails', !validateImport('{"key": "value"}').valid);
+    assert('Missing fields gets error', validateImport('[{"id":"x"}]').errors.length > 0);
+
+    // ================================================
+    // escapeHTML
+    // ================================================
+    section('escapeHTML');
+    assert('Escapes <', escapeHTML('<') === '&lt;');
+    assert('Escapes >', escapeHTML('>') === '&gt;');
+    assert('Escapes &', escapeHTML('&') === '&amp;');
+    assert('Escapes "', escapeHTML('"') === '&quot;');
+
+    // ================================================
+    // SUMMARY
+    // ================================================
+    const total = passed + failed;
+    summary.className = `summary ${failed === 0 ? 'all-pass' : 'has-fail'}`;
+    summary.textContent = `${passed}/${total} tests passed${failed > 0 ? ` (${failed} failed)` : ' ✅'}`;
+  </script>
+</body>
+</html>
