@@ -68,11 +68,49 @@ body {
   font-size: 1rem;
   line-height: 1.6;
   color: var(--clr-text);
-  background: var(--clr-bg);
+  /* Background color fallback. Actual image is rendered in ::before so it can be blurred */
+  background-color: var(--clr-bg);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle overlay to improve text contrast over background images */
+/* Background image is placed in ::before so we can apply a blur */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url('../images/bg.jpg'), url('../images/bg-placeholder.svg');
+  background-repeat: no-repeat, no-repeat;
+  background-size: cover, cover;
+  background-position: center center, center center;
+  filter: blur(7px) brightness(0.96);
+  transform: scale(1.03);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Subtle overlay to improve text contrast over background images — sits above the blurred image */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.55);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Ensure main content and footer appear above the background and overlay */
+.main-content, .site-footer, .page-container {
+  position: relative;
+  z-index: 2;
+}
+
+/* Dark theme overlay tweak */
+[data-theme="dark"] body::after {
+  background: rgba(0,0,0,0.45);
 }
 
 /* ---------- Skip link (A11y) ---------- */

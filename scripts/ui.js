@@ -29,13 +29,13 @@ const statusAssertive = $('#status-assertive');
 let currentSort = { field: 'date', dir: 'desc' };
 let currentSearch = '';
 let caseSensitive = false;
-let editingTaskId = null;
+let editingTaskId = null;   // tracks which row is being inline-edited (null = none)
 
 // ===== Announce (A11y) =====
 export function announce(message, priority = 'polite') {
   const el = priority === 'assertive' ? statusAssertive : statusPolite;
   el.textContent = '';
-  // Force reannounce
+  // Force reannounce by clearing first
   requestAnimationFrame(() => {
     el.textContent = message;
   });
@@ -120,16 +120,15 @@ export function navigateTo(page) {
   if (page === 'dashboard') renderDashboard();
   if (page === 'records') renderRecords();
   if (page === 'settings') renderSettings();
-  if (page === 'add' && !editingTaskId) resetForm();
+  if (page === 'add') resetForm();
 }
 
-// ===== RECORDS RENDERING =====
+// =============================================================================
+//  RECORDS RENDERING — Table (desktop) + Cards (mobile)
+// =============================================================================
 export function renderRecords() {
-  const { filtered, regex, error } = filterTasks(
-    state.sortTasks(currentSort.field, currentSort.dir),
-    currentSearch,
-    caseSensitive
-  );
+  const sorted = state.sortTasks(currentSort.field, currentSort.dir);
+  const { filtered, regex, error } = filterTasks(sorted, currentSearch, caseSensitive);
 
   // Search error
   const searchError = $('#search-error');
@@ -153,16 +152,25 @@ export function renderRecords() {
 
   empty.hidden = true;
 
-  // Render table rows
-  tbody.innerHTML = filtered.map(task => renderTableRow(task, regex)).join('');
+  // ---- Build table rows ----
+  tbody.innerHTML = filtered.map(task =>
+    editingTaskId === task.id
+      ? renderTableRowEditing(task)
+      : renderTableRow(task, regex)
+  ).join('');
 
-  // Render mobile cards
-  cards.innerHTML = filtered.map(task => renderCard(task, regex)).join('');
+  // ---- Build mobile cards ----
+  cards.innerHTML = filtered.map(task =>
+    editingTaskId === task.id
+      ? renderCardEditing(task)
+      : renderCard(task, regex)
+  ).join('');
 
-  // Bind row events
+  // Bind events
   bindRecordEvents();
 }
 
+// --------------- Normal display row ---------------
 function renderTableRow(task, regex) {
   const title = highlight(task.title, regex);
   const tag = highlight(task.tag, regex);
@@ -188,6 +196,40 @@ function renderTableRow(task, regex) {
   `;
 }
 
+// --------------- Inline-editing row (table) ---------------
+function renderTableRowEditing(task) {
+  return `
+    <tr data-id="${task.id}" class="editing">
+      <td>
+        <input class="edit-input" data-field="title" value="${escapeHTML(task.title)}"
+               aria-label="Edit title" placeholder="Title">
+        <input class="edit-input" data-field="notes" value="${escapeHTML(task.notes || '')}"
+               aria-label="Edit notes" placeholder="Notes (optional)" style="margin-top:4px;font-size:0.85rem">
+      </td>
+      <td>
+        <input class="edit-input" data-field="dueDate" value="${escapeHTML(task.dueDate)}"
+               aria-label="Edit due date" placeholder="YYYY-MM-DD">
+      </td>
+      <td>
+        <input class="edit-input" data-field="duration" value="${task.duration}"
+               aria-label="Edit duration" placeholder="Minutes" style="width:70px">
+      </td>
+      <td>
+        <input class="edit-input" data-field="tag" value="${escapeHTML(task.tag)}"
+               aria-label="Edit tag" placeholder="Tag" list="tag-suggestions">
+      </td>
+      <td>
+        <div class="action-btns">
+          <button class="btn-icon btn-icon--save btn-save" aria-label="Save changes" title="Save">💾</button>
+          <button class="btn-icon btn-cancel-edit" aria-label="Cancel edit" title="Cancel">✖️</button>
+        </div>
+        <span class="inline-edit-error" role="alert" style="color:var(--clr-danger);font-size:0.78rem;display:block;margin-top:4px"></span>
+      </td>
+    </tr>
+  `;
+}
+
+// --------------- Normal display card (mobile) ---------------
 function renderCard(task, regex) {
   const title = highlight(task.title, regex);
   const tag = highlight(task.tag, regex);
@@ -212,12 +254,85 @@ function renderCard(task, regex) {
   `;
 }
 
+// --------------- Inline-editing card (mobile) ---------------
+function renderCardEditing(task) {
+  return `
+    <div class="record-card record-card--editing" data-id="${task.id}" style="border-color:var(--clr-primary);background:var(--clr-primary-light)">
+      <div class="form-group" style="margin-bottom:var(--space-sm)">
+        <label class="form-label" style="font-size:0.8rem">Title</label>
+        <input class="edit-input form-input" data-field="title" value="${escapeHTML(task.title)}" aria-label="Edit title">
+      </div>
+      <div style="display:flex;gap:var(--space-sm);margin-bottom:var(--space-sm)">
+        <div class="form-group" style="flex:1;margin-bottom:0">
+          <label class="form-label" style="font-size:0.8rem">Due Date</label>
+          <input class="edit-input form-input" data-field="dueDate" value="${escapeHTML(task.dueDate)}" aria-label="Edit due date" placeholder="YYYY-MM-DD">
+        </div>
+        <div class="form-group" style="flex:1;margin-bottom:0">
+          <label class="form-label" style="font-size:0.8rem">Duration (min)</label>
+          <input class="edit-input form-input" data-field="duration" value="${task.duration}" aria-label="Edit duration">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:var(--space-sm)">
+        <label class="form-label" style="font-size:0.8rem">Tag</label>
+        <input class="edit-input form-input" data-field="tag" value="${escapeHTML(task.tag)}" aria-label="Edit tag" list="tag-suggestions">
+      </div>
+      <div class="form-group" style="margin-bottom:var(--space-sm)">
+        <label class="form-label" style="font-size:0.8rem">Notes</label>
+        <input class="edit-input form-input" data-field="notes" value="${escapeHTML(task.notes || '')}" aria-label="Edit notes">
+      </div>
+      <span class="inline-edit-error" role="alert" style="color:var(--clr-danger);font-size:0.78rem;display:block;margin-bottom:var(--space-sm)"></span>
+      <div class="record-card-actions">
+        <button class="btn-icon btn-icon--save btn-save" aria-label="Save changes">💾 Save</button>
+        <button class="btn-icon btn-cancel-edit" aria-label="Cancel edit">✖️ Cancel</button>
+      </div>
+    </div>
+  `;
+}
+
+// ===== Bind events on record rows/cards =====
 function bindRecordEvents() {
-  // Edit buttons
+  // Edit buttons — start inline editing
   $$('.btn-edit').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const id = e.target.closest('[data-id]').dataset.id;
-      startEdit(id);
+      editingTaskId = id;
+      renderRecords();
+      // Focus first edit input in the editing row
+      const firstInput = document.querySelector(`[data-id="${id}"] .edit-input`);
+      if (firstInput) firstInput.focus();
+      announce('Editing task inline. Press Enter to save or Escape to cancel.');
+    });
+  });
+
+  // Save buttons — validate and commit inline edit
+  $$('.btn-save').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      saveInlineEdit(e.target.closest('[data-id]'));
+    });
+  });
+
+  // Cancel buttons — discard inline edit
+  $$('.btn-cancel-edit').forEach(btn => {
+    btn.addEventListener('click', () => {
+      editingTaskId = null;
+      renderRecords();
+      announce('Edit cancelled.');
+    });
+  });
+
+  // Keyboard: Enter to save, Escape to cancel in editing rows
+  document.querySelectorAll('.editing .edit-input, .record-card--editing .edit-input').forEach(input => {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveInlineEdit(e.target.closest('[data-id]'));
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        editingTaskId = null;
+        renderRecords();
+        announce('Edit cancelled.');
+      }
     });
   });
 
@@ -231,6 +346,7 @@ function bindRecordEvents() {
         `Are you sure you want to delete "${task?.title || 'this task'}"?`,
         () => {
           state.deleteTask(id);
+          if (editingTaskId === id) editingTaskId = null;
           renderRecords();
           announce('Task deleted.', 'polite');
         }
@@ -239,30 +355,55 @@ function bindRecordEvents() {
   });
 }
 
-// ===== INLINE EDIT (via form page) =====
-function startEdit(id) {
-  const task = state.getTask(id);
-  if (!task) return;
+/**
+ * Read values from inline edit inputs, validate, and save.
+ */
+function saveInlineEdit(rowEl) {
+  if (!rowEl) return;
+  const id = rowEl.dataset.id;
 
-  editingTaskId = id;
+  // Gather values from edit inputs
+  const getValue = (field) => {
+    const input = rowEl.querySelector(`.edit-input[data-field="${field}"]`);
+    return input ? input.value : '';
+  };
 
-  // Populate form
-  $('#form-id').value = task.id;
-  $('#form-title').value = task.title;
-  $('#form-date').value = task.dueDate;
-  $('#form-duration').value = task.duration;
-  $('#form-tag').value = task.tag;
-  $('#form-notes').value = task.notes || '';
+  const data = {
+    title: getValue('title'),
+    date: getValue('dueDate'),
+    duration: getValue('duration'),
+    tag: getValue('tag'),
+    notes: getValue('notes')
+  };
 
-  // Update form heading & button
-  $('#add-heading').textContent = 'Edit Task';
-  $('#form-submit-btn').textContent = 'Save Changes';
+  // Validate
+  const { valid, errors } = validateForm(data);
+  const errorEl = rowEl.querySelector('.inline-edit-error');
 
-  navigateTo('add');
-  $('#form-title').focus();
+  if (!valid) {
+    const msgs = Object.values(errors).filter(Boolean);
+    if (errorEl) errorEl.textContent = msgs.join(' · ');
+    announce('Fix errors: ' + msgs.join('. '), 'assertive');
+    return;
+  }
+
+  // Commit update — this also sets updatedAt
+  state.updateTask(id, {
+    title: data.title.trim(),
+    dueDate: data.date,
+    duration: parseFloat(data.duration),
+    tag: data.tag.trim(),
+    notes: (data.notes || '').trim()
+  });
+
+  editingTaskId = null;
+  renderRecords();
+  announce(`Task "${data.title}" updated successfully.`);
 }
 
-// ===== SEARCH & SORT =====
+// =============================================================================
+//  SEARCH & SORT
+// =============================================================================
 export function initSearch() {
   const input = $('#search-input');
   const caseToggle = $('#search-case');
@@ -306,7 +447,9 @@ export function initSort() {
   });
 }
 
-// ===== DASHBOARD =====
+// =============================================================================
+//  DASHBOARD
+// =============================================================================
 export function renderDashboard() {
   const stats = state.getStats();
   const unit = getUnitLabel();
@@ -337,6 +480,7 @@ function renderCapStatus(stats) {
 
   if (!stats.weeklyCap || stats.weeklyCap <= 0) {
     capEl.textContent = 'No cap set';
+    capEl.style.color = '';
     barFill.style.width = '0%';
     barFill.classList.remove('over');
     return;
@@ -346,7 +490,6 @@ function renderCapStatus(stats) {
   const pct = Math.min((stats.weeklyDuration / stats.weeklyCap) * 100, 100);
 
   barContainer.setAttribute('aria-valuenow', Math.round(pct));
-
   barFill.style.width = `${pct}%`;
 
   if (remaining >= 0) {
@@ -354,6 +497,7 @@ function renderCapStatus(stats) {
       ? (remaining / 60).toFixed(1) + ' hr'
       : remaining + ' min';
     capEl.textContent = `${dispRemaining} left`;
+    capEl.style.color = '';
     barFill.classList.remove('over');
     announce(`Duration cap: ${dispRemaining} remaining this week.`, 'polite');
   } else {
@@ -415,7 +559,9 @@ function renderTagBreakdown(tagDurations) {
   }).join('');
 }
 
-// ===== FORM =====
+// =============================================================================
+//  ADD FORM (for the "Add New" page — new task creation only)
+// =============================================================================
 export function initForm() {
   const form = $('#task-form');
   const fields = ['title', 'date', 'duration', 'tag', 'notes'];
@@ -440,7 +586,7 @@ export function initForm() {
     });
   });
 
-  // Submit
+  // Submit — always creates a new task
   form.addEventListener('submit', (e) => {
     e.preventDefault();
 
@@ -464,28 +610,14 @@ export function initForm() {
     });
 
     if (!valid) {
-      // Focus first error
       const firstError = fields.find(f => errors[f]);
       if (firstError) $(`#form-${firstError}`).focus();
       announce('Please fix the form errors before submitting.', 'assertive');
       return;
     }
 
-    // Add or update
-    if (editingTaskId) {
-      state.updateTask(editingTaskId, {
-        title: data.title.trim(),
-        dueDate: data.date,
-        duration: parseFloat(data.duration),
-        tag: data.tag.trim(),
-        notes: (data.notes || '').trim()
-      });
-      announce(`Task "${data.title}" updated successfully.`, 'polite');
-      editingTaskId = null;
-    } else {
-      state.addTask(data);
-      announce(`Task "${data.title}" added successfully.`, 'polite');
-    }
+    state.addTask(data);
+    announce(`Task "${data.title}" added successfully.`, 'polite');
 
     resetForm();
     navigateTo('records');
@@ -511,6 +643,7 @@ function showFieldStatus(field, result) {
     input.classList.remove('valid');
     errorEl.textContent = result.error;
     errorEl.hidden = false;
+    errorEl.style.color = '';
   } else if (result.warning) {
     input.classList.remove('invalid');
     input.classList.add('valid');
@@ -528,7 +661,6 @@ function showFieldStatus(field, result) {
 function resetForm() {
   const form = $('#task-form');
   form.reset();
-  editingTaskId = null;
   $('#form-id').value = '';
   $('#add-heading').textContent = 'Add New Task';
   $('#form-submit-btn').textContent = 'Add Task';
@@ -537,9 +669,7 @@ function resetForm() {
   ['title', 'date', 'duration', 'tag', 'notes'].forEach(f => {
     const input = $(`#form-${f}`);
     const errorEl = $(`#form-${f}-error`);
-    if (input) {
-      input.classList.remove('invalid', 'valid');
-    }
+    if (input) input.classList.remove('invalid', 'valid');
     if (errorEl) {
       errorEl.hidden = true;
       errorEl.style.color = '';
@@ -553,7 +683,9 @@ export function updateTagSuggestions() {
   datalist.innerHTML = state.tags.map(t => `<option value="${escapeHTML(t)}">`).join('');
 }
 
-// ===== SETTINGS =====
+// =============================================================================
+//  SETTINGS
+// =============================================================================
 export function initSettings() {
   // Duration unit
   $$('input[name="duration-unit"]').forEach(radio => {
@@ -681,7 +813,6 @@ function handleImport(e) {
     const result = validateImport(reader.result);
 
     if (result.data.length > 0) {
-      // Merge or replace — we'll replace
       state.replaceTasks(result.data);
       renderRecords();
       statusEl.className = 'import-status success';
@@ -700,8 +831,6 @@ function handleImport(e) {
     }
   };
   reader.readAsText(file);
-
-  // Reset input so same file can be re-imported
   e.target.value = '';
 }
 
@@ -720,7 +849,9 @@ function initTheme() {
   });
 }
 
-// ===== Confirm Dialog =====
+// =============================================================================
+//  CONFIRM DIALOG
+// =============================================================================
 let confirmCallback = null;
 
 export function initConfirm() {
@@ -747,7 +878,7 @@ export function initConfirm() {
     }
   });
 
-  // Trap focus inside modal
+  // Trap focus inside modal when open
   overlay.addEventListener('keydown', (e) => {
     if (e.key === 'Tab') {
       const focusable = overlay.querySelectorAll('button');
