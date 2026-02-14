@@ -1,9 +1,21 @@
+## LIVE DEMO 
+ https://hassanah-dev006.github.io/campus_life_planner_app_Hassanah-dev006/
+
+
+ ## DEMO VIDEO
+ https://www.loom.com/share/91417aef90a9464dbc1774ff24174ad5
+
+
+
+
+
 # 📋 Campus Life Planner
 
 A fully accessible, responsive, vanilla HTML/CSS/JavaScript application for managing campus tasks, events, and deadlines. Built for the Frontend Web Development course at African Leadership University.
 
 **Theme:** Campus Life Planner  
-**Live Demo:** [GitHub Pages URL](https://yourusername.github.io/campus-life-planner/)
+**Live Demo:** [GitHub Pages URL](https://hassanah-dev006.github.io/campus_life_planner_app_Hassanah-dev006/
+)
 
 ---
 
